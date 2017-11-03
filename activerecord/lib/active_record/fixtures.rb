@@ -944,6 +944,7 @@ module ActiveRecord
         @fixture_connections = enlist_fixture_connections
         @fixture_connections.each do |connection|
           connection.begin_transaction joinable: false
+          connection.pool.lock_thread = true
         end
       # Load fixtures for every test.
       else
@@ -961,6 +962,7 @@ module ActiveRecord
       if run_in_transaction?
         @fixture_connections.each do |connection|
           connection.rollback_transaction if connection.transaction_open?
+          connection.pool.lock_thread = false
         end
         @fixture_connections.clear
       else

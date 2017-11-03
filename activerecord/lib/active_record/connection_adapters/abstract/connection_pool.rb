@@ -248,7 +248,17 @@ module ActiveRecord
         @connections         = []
         @automatic_reconnect = true
 
+        @lock_thread = false
+
         @available = Queue.new self
+      end
+
+      def lock_thread=(lock_thread)
+        if lock_thread
+          @lock_thread = Thread.current
+        else
+          @lock_thread = nil
+        end
       end
 
       # Retrieve the connection associated with the current thread, or call
@@ -439,7 +449,11 @@ module ActiveRecord
       end
 
       def current_connection_id #:nodoc:
-        Base.connection_id ||= Thread.current.object_id
+        if @lock_thread
+          @lock_thread.object_id
+        else
+          Base.connection_id ||= Thread.current.object_id
+        end
       end
 
       def checkout_new_connection
